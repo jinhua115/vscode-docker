@@ -7,10 +7,10 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import { Task } from 'vscode';
 import { DockerPlatform } from '../debugging/DockerPlatformHelper';
+import { ext } from '../extensionVariables';
 import { localize } from '../localize';
 import { cloneObject } from '../utils/cloneObject';
 import { CommandLineBuilder } from '../utils/commandLineBuilder';
-import { dockerExePath } from '../utils/dockerExePathProvider';
 import { resolveVariables } from '../utils/resolveVariables';
 import { DockerBuildOptions } from './DockerBuildTaskDefinitionBase';
 import { DockerTaskProvider } from './DockerTaskProvider';
@@ -72,26 +72,20 @@ export class DockerBuildTaskProvider extends DockerTaskProvider {
     }
 
     private async validateResolvedDefinition(context: DockerBuildTaskContext, dockerBuild: DockerBuildOptions): Promise<void> {
-        if (!dockerBuild.tag) {
-            throw new Error(localize('vscode-docker.tasks.buildProvider.noDockerImage', 'No Docker image name was provided or resolved.'));
-        }
-
         if (!dockerBuild.context) {
             throw new Error(localize('vscode-docker.tasks.buildProvider.noBuildContext', 'No Docker build context was provided or resolved.'));
         } else if (!await fse.pathExists(path.resolve(context.folder.uri.fsPath, resolveVariables(dockerBuild.context, context.folder)))) {
             throw new Error(localize('vscode-docker.tasks.buildProvider.invalidBuildContext', 'The Docker build context \'{0}\' does not exist or could not be accessed.', dockerBuild.context));
         }
 
-        if (!dockerBuild.dockerfile) {
-            throw new Error(localize('vscode-docker.tasks.buildProvider.noDockerfile', 'No Dockerfile was provided or resolved.'));
-        } else if (!await fse.pathExists(path.resolve(context.folder.uri.fsPath, resolveVariables(dockerBuild.dockerfile, context.folder)))) {
+        if (dockerBuild.dockerfile && !await fse.pathExists(path.resolve(context.folder.uri.fsPath, resolveVariables(dockerBuild.dockerfile, context.folder)))) {
             throw new Error(localize('vscode-docker.tasks.buildProvider.invalidDockerfile', 'The Dockerfile \'{0}\' does not exist or could not be accessed.', dockerBuild.dockerfile));
         }
     }
 
     private async resolveCommandLine(options: DockerBuildOptions): Promise<CommandLineBuilder> {
         return CommandLineBuilder
-            .create(dockerExePath(), 'build', '--rm')
+            .create(ext.dockerContextManager.getDockerCommand(), 'build', '--rm')
             .withFlagArg('--pull', options.pull)
             .withNamedArg('-f', options.dockerfile)
             .withKeyValueArgs('--build-arg', options.buildArgs)

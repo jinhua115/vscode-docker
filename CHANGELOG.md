@@ -1,3 +1,34 @@
+## 1.22.0 - 18 April 2022
+### Added
+* Added a setting, `docker.composeCommand`, to allow configuring the command used for Compose operations. If unset, the extension will attempt to automatically detect whether to use `docker compose` or `docker-compose`. [#2977](https://github.com/microsoft/vscode-docker/issues/2977)
+* In Python projects, the `.venv` directory is now added to the `.dockerignore` file, so it will no longer be part of the `docker build` context. [#3476](https://github.com/microsoft/vscode-docker/issues/3476)
+* A "Copy Full Tag" command has been added for images in the Registries view. [#3481](https://github.com/microsoft/vscode-docker/pull/3481)
+
+## 1.21.0 - 21 March 2022
+### Added
+* Added the `projectName` option to `docker-compose` tasks, corresponding to `--project-name`. [#3436](https://github.com/microsoft/vscode-docker/issues/3436)
+* Support for the `options.env` and `options.cwd` options on all task types. [#3437](https://github.com/microsoft/vscode-docker/issues/3437)
+* Support for the `${userHome}` task variable on all task types. [#3455](https://github.com/microsoft/vscode-docker/pull/3455)
+
+## 1.20.0 - 22 February 2022
+### Added
+* The "Compose Start" and "Compose Stop" commands available in the explorer context menu will now also be available in the command palette. [#3140](https://github.com/microsoft/vscode-docker/issues/3140)
+
+### Fixed
+* Flask apps will now use port 5002 by default, and .NET apps will use the semi-random port scaffolded in the `launchSettings.json` file. This will avoid conflicting with port 5000 which is often in-use on Mac. [#3381](https://github.com/microsoft/vscode-docker/issues/3381)
+* Fixed an issue in the container files explorer on Windows containers with other localizations. [#3415](https://github.com/microsoft/vscode-docker/pull/3415)
+* The experience for adding Dockerfiles to Django projects has been improved slightly. [#3410](https://github.com/microsoft/vscode-docker/issues/3410)
+
+## 1.19.0 - 17 January 2022
+### Added
+* For volume mappings in `docker-run` tasks, the `ro,z` and `rw,z` permissions have been added, allowing support for SELinux systems. [#3289](https://github.com/microsoft/vscode-docker/pull/3289)
+
+### Fixed
+* `docker-run` and `docker-build` tasks will now respect the `docker.dockerPath` setting. [#3281](https://github.com/microsoft/vscode-docker/issues/3281)
+* Several fixes and enhancements to the Compose language service have been made. [#78](https://github.com/microsoft/compose-language-service/issues/78), [#70](https://github.com/microsoft/compose-language-service/issues/70), [#69](https://github.com/microsoft/compose-language-service/issues/69), [#68](https://github.com/microsoft/compose-language-service/issues/68), [#65](https://github.com/microsoft/compose-language-service/issues/65)
+* For .NET projects, the `/p:UseAppHost=false` argument is added to the `dotnet publish` command line, in order to prevent a duplicate executable file being created and bloating image size. [#3371](https://github.com/microsoft/vscode-docker/issues/3371)
+* The `envFiles` option in `docker-compose` tasks has been replaced with `envFile`, as only one is actually allowed. [#3339](https://github.com/microsoft/vscode-docker/pull/3339)
+
 ## 1.18.0 - 15 November 2021
 ### Added
 * Substantial additions (to completions especially) have been made to the Compose language service. It now has near-parity to the previously-available features. [#3222](https://github.com/microsoft/vscode-docker/issues/3222)

@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
-import { IActionContext } from 'vscode-azureextensionui';
-import { rewriteComposeCommandIfNeeded } from '../../docker/Contexts';
 import { ext } from '../../extensionVariables';
 import { localize } from '../../localize';
 import { ContainerGroupTreeItem } from '../../tree/containers/ContainerGroupTreeItem';
@@ -55,9 +54,9 @@ async function composeGroup(context: IActionContext, composeCommand: 'logs' | 's
     const projectNameArgument = isWindows() ? `-p "${projectName}"` : `-p '${projectName}'`;
     const envFileArgument = envFile ? (isWindows() ? `--env-file "${envFile}"` : `--env-file '${envFile}'`) : '';
 
-    const terminalCommand = `docker-compose ${filesArgument} ${envFileArgument} ${projectNameArgument} ${composeCommand} ${additionalArguments || ''}`;
+    const terminalCommand = `${await ext.dockerContextManager.getComposeCommand(context)} ${filesArgument} ${envFileArgument} ${projectNameArgument} ${composeCommand} ${additionalArguments || ''}`;
 
-    await executeAsTask(context, await rewriteComposeCommandIfNeeded(terminalCommand), 'Docker Compose', { addDockerEnv: true, cwd: workingDirectory, });
+    await executeAsTask(context, terminalCommand, 'Docker Compose', { addDockerEnv: true, cwd: workingDirectory, });
 }
 
 function getComposeWorkingDirectory(node: ContainerGroupTreeItem): string | undefined {
@@ -70,9 +69,12 @@ function getComposeFiles(node: ContainerGroupTreeItem): string[] | undefined {
     // Find a container with the `com.docker.compose.project.config_files` label, which gives all the compose files (within the working directory) used to up this container
     const container = (node.ChildTreeItems as ContainerTreeItem[]).find(c => c.labels?.['com.docker.compose.project.config_files']);
 
-    // Paths may be subpaths, but working dir generally always directly contains the config files, so let's cut off the subfolder and get just the file name
+    // Paths may be subpaths, but working dir generally always directly contains the config files, so unless the file is already absolute, let's cut off the subfolder and get just the file name
     // (In short, the working dir may not be the same as the cwd when the docker-compose up command was called, BUT the files are relative to that cwd)
-    return container?.labels?.['com.docker.compose.project.config_files']?.split(',')?.map(f => path.parse(f).base);
+    // Note, it appears compose v2 *always* uses absolute paths, both for this and `working_dir`
+    return container?.labels?.['com.docker.compose.project.config_files']
+        ?.split(',')
+        ?.map(f => path.isAbsolute(f) ? f : path.parse(f).base);
 }
 
 function getComposeProjectName(node: ContainerGroupTreeItem): string | undefined {
